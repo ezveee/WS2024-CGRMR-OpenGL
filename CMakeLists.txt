@@ -9,18 +9,22 @@ add_executable(WS2024_CGRMR_OpenGL src/main.cpp)
 add_definitions(-DGLEW_STATIC)
 
 # Include directories
+include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/libs)
 include_directories(${CMAKE_SOURCE_DIR}/libs/glew/include)
 include_directories(${CMAKE_SOURCE_DIR}/libs/freeglut/include)
+include_directories(${CMAKE_SOURCE_DIR}/libs/glfw/include)
 
 # Link directories
 link_directories(${CMAKE_SOURCE_DIR}/libs/glew/lib)
 link_directories(${CMAKE_SOURCE_DIR}/libs/freeglut/lib)
+link_directories(${CMAKE_SOURCE_DIR}/libs/glfw/lib)
 
 # Link libraries
 target_link_libraries(WS2024_CGRMR_OpenGL
         ${CMAKE_SOURCE_DIR}/libs/glew/lib/libglew32.a
         ${CMAKE_SOURCE_DIR}/libs/freeglut/lib/libfreeglut.dll.a
+        ${CMAKE_SOURCE_DIR}/libs/glfw/lib/libglfw3dll.a
         opengl32
 )
 
@@ -34,5 +38,11 @@ add_custom_command(TARGET WS2024_CGRMR_OpenGL POST_BUILD
 add_custom_command(TARGET WS2024_CGRMR_OpenGL POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_SOURCE_DIR}/libs/freeglut/bin/libfreeglut.dll
+        $<TARGET_FILE_DIR:WS2024_CGRMR_OpenGL>
+)
+
+add_custom_command(TARGET WS2024_CGRMR_OpenGL POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_SOURCE_DIR}/libs/glfw/bin/glfw3.dll
         $<TARGET_FILE_DIR:WS2024_CGRMR_OpenGL>
 )
