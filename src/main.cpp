@@ -18,6 +18,8 @@ void display();
 void reshape(int width, int height);
 void processInput(unsigned char key, int x, int y);
 void mouseCallback(int button, int state, int x, int y);
+// void renderText(float x, float y, std::string text);
+void renderText(float x, float y, std::string text, float scale = 1.0f);
 unsigned int loadTexture(const char* path);
 
 struct Fish {
@@ -30,6 +32,7 @@ struct Fish {
 std::vector<Fish> fishList;
 Shader* shader;
 unsigned int VAO, fishTexture;
+int score = 0;
 
 int main(int argc, char** argv) {
     // Initialize GLUT
@@ -129,6 +132,9 @@ void display() {
     }
 
     glBindVertexArray(0);
+
+    renderText(200.0f, 200.0f, "Score: " + std::to_string(score), 2);
+
     glutSwapBuffers();
 }
 
@@ -158,12 +164,44 @@ void mouseCallback(int button, int state, int x, int y) {
                 gameY >= fishY && gameY <= fishY + 100.0f) {
                 std::cout << "Fish clicked at (" << fishX << ", " << fishY << ")" << std::endl;
 
-                // TODO: add scoring logic
-                fish.position.x = -100.0f;
+                if (gameX >= fishX && gameX <= fishX + 100.0f &&
+                gameY >= fishY && gameY <= fishY + 100.0f) {
+                    score++;
+                    std::cout << "Score: " << score << std::endl;
+                    fish.position.x = -100.0f;
+                }
             }
         }
     }
 }
+
+// void renderText(float x, float y, std::string text) {
+void renderText(float x, float y, std::string text, float scale) {
+    glPushMatrix();
+
+    glTranslatef(x, y, 0.0f);
+    glScalef(scale, scale, 1.0f);
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+    for (char c : text) {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, c);
+    }
+
+    glPopMatrix();
+
+    // glUseProgram(0); // disable shaders
+    // glDisable(GL_TEXTURE_2D); // disable textures
+    //
+    // glColor3f(1.0f, 1.0f, 1.0f);
+    // glRasterPos2f(x, y);
+    // std::cout << "Rendering text at: (" << x << ", " << y << ")" << std::endl;
+    //
+    // for (char c : text) {
+    //     glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, c);
+    // }
+}
+
 
 unsigned int loadTexture(const char* path) {
     unsigned int textureID;
