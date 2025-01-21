@@ -3,6 +3,9 @@
 #include <GL\freeglut.h>
 #include <iostream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 void display() {
 	// Set color of background (def=black) to Yellow
 	glClearColor(0, 1, 1, 0.0);
@@ -21,6 +24,14 @@ void display() {
 	glFlush();
 }
 
+GLuint loadTexture(const char* filePath) {
+	int width, height, nrChannels;
+	unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 0); //IMAGE STB TEST!!!!
+	if (!data) {
+		std::cerr << "Failed to load texture: " << filePath << std::endl;
+		return 0;
+	}
+}
 
 int main(int argc, char* argv[]) {
 
@@ -36,5 +47,8 @@ int main(int argc, char* argv[]) {
 
 	// To avoid window to be closed
 	glutMainLoop();
+
+	glewInit();
+	GLuint texture = loadTexture("example.png");
 	return 0;
 }
