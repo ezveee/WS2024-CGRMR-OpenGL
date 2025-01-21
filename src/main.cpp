@@ -17,6 +17,7 @@ const unsigned int SCR_HEIGHT = 600;
 void display();
 void reshape(int width, int height);
 void processInput(unsigned char key, int x, int y);
+void mouseCallback(int button, int state, int x, int y);
 unsigned int loadTexture(const char* path);
 
 struct Fish {
@@ -92,6 +93,7 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(processInput);
+    glutMouseFunc(mouseCallback);
     glutIdleFunc(display);
 
     glutMainLoop();
@@ -137,6 +139,29 @@ void reshape(int width, int height) {
 void processInput(unsigned char key, int x, int y) {
     if (key == 27) { // Escape key
         exit(0);
+    }
+}
+
+void mouseCallback(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        // convert screen coords to game coords
+        float gameX = x;
+        float gameY = SCR_HEIGHT - y; // flip Y cause opengls origin is bottom-left
+
+        // check if click intersects any fish
+        for (auto& fish : fishList) {
+            float fishX = fish.position.x;
+            float fishY = fish.position.y;
+
+            // based on fish size
+            if (gameX >= fishX && gameX <= fishX + 100.0f &&
+                gameY >= fishY && gameY <= fishY + 100.0f) {
+                std::cout << "Fish clicked at (" << fishX << ", " << fishY << ")" << std::endl;
+
+                // TODO: add scoring logic
+                fish.position.x = -100.0f;
+            }
+        }
     }
 }
 
