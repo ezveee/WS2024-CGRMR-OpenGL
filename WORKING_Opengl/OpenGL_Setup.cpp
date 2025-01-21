@@ -42,6 +42,19 @@ int main(int argc, char* argv[]) {
 	// Initialize GLUT
 	glutInit(&argc, argv);
 
+	//GLM TEST
+	glm::vec3 position(0.0f, 0.0f, 0.0f);
+	glm::vec3 movement(1.0f, 0.0f, 0.0f);
+	position += movement;
+
+	std::cout << "New Position: ("
+		<< position.x << ", "
+		<< position.y << ", "
+		<< position.z << ")" << std::endl;
+
+	//STB IMAGE TEST
+	GLuint texture = loadTexture("example.png");
+
 	// Set the window size
 	glutInitWindowSize(800, 600);
 	// Create the window with the title "Hello,GL"
@@ -53,17 +66,6 @@ int main(int argc, char* argv[]) {
 	glutMainLoop();
 
 	glewInit();
-	//STB IMAGE TEST
-	GLuint texture = loadTexture("example.png");
 
-	//GLM TEST
-	glm::vec3 position(0.0f, 0.0f, 0.0f);
-	glm::vec3 movement(1.0f, 0.0f, 0.0f);
-	position += movement;
-
-	std::cout << "New Position: ("
-		<< position.x << ", "
-		<< position.y << ", "
-		<< position.z << ")" << std::endl;
 	return 0;
 }
