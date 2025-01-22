@@ -60,10 +60,10 @@ int main(int argc, char** argv) {
     // Define quad vertices
     float vertices[] = {
             // positions     // texture coords (x, y, z (0), u, v (coordinates for texture - the same) - used as fish later + NORMALS
-            0.0f,  1.0f, 0.0f,     0.0f, 1.0f,    0.0f, 0.0f, 1.0f,//Top left
-            1.0f,  1.0f, 0.0f,     1.0f, 1.0f,    0.0f, 0.0f, 1.0f, // Top right
-            1.0f,  0.0f, 0.0f,     1.0f, 0.0f,    0.0f, 0.0f, 1.0f, //Bottom right
-            0.0f,  0.0f, 0.0f,     0.0f, 0.0f,    0.0f, 0.0f, 1.0f //Bottom left
+            0.0f,  1.0f, 0.0f,     0.0f, 1.0f,    0.0f, 1.0f, 0.0f,//Top left
+            1.0f,  1.0f, 0.0f,     1.0f, 1.0f,    0.0f, 1.0f, 0.0f, // Top right
+            1.0f,  0.0f, 0.0f,     1.0f, 0.0f,    0.0f, 1.0f, 0.0f, //Bottom right
+            0.0f,  0.0f, 0.0f,     0.0f, 0.0f,    0.0f, 1.0f, 0.0f //Bottom left
     }; //Basically . . .Put this vertex of texture on this vertex of quad
     unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
 
