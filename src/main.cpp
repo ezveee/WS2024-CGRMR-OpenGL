@@ -27,6 +27,8 @@ struct Fish {
     glm::vec2 speed;
     unsigned int textureID;
     int pointValue;
+    bool isClicked = false;
+    float scale = 1.0f;
 };
 
 // Globals
@@ -129,11 +131,22 @@ void display() {
 
     for (auto& fish : fishList) {
         fish.position += fish.speed * 0.01f;
-        if (fish.position.x > SCR_WIDTH) fish.position.x = -100.0f;
+
+        if (fish.position.x > SCR_WIDTH)
+            fish.position.x = -100.0f;
+
+        if (fish.isClicked) {
+            fish.scale -= 0.0025f;
+            if (fish.scale <= 0.0f) {
+                fish.isClicked = false;
+                fish.scale = 1.0f;
+                fish.position.x = -100.0f;
+            }
+        }
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(fish.position, 0.0f));
-        model = glm::scale(model, glm::vec3(100.0f, 100.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(100.0f * fish.scale, 100.0f * fish.scale, 1.0f));
         shader->setMat4("model", model);
 
         glBindTexture(GL_TEXTURE_2D, fish.textureID);
@@ -142,7 +155,7 @@ void display() {
 
     glBindVertexArray(0);
 
-    renderText(200.0f, 200.0f, "Score: " + std::to_string(score), 2);
+    renderText(200.0f, 200.0f, "Score: " + std::to_string(score), 100);
 
     glutSwapBuffers();
 }
@@ -177,7 +190,7 @@ void mouseCallback(int button, int state, int x, int y) {
                 gameY >= fishY && gameY <= fishY + 100.0f) {
                     score += fish.pointValue;
                     std::cout << "Score: " << score << std::endl;
-                    fish.position.x = -100.0f;
+                    fish.isClicked = true;
                 }
             }
         }
