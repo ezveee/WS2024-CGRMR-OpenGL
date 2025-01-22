@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < 5; i++) {
         fishPoints[i] = (i+1)*10;
-        fishList.push_back({ glm::vec2(-100.0f * i, 100.0f * i), glm::vec2(10.0f, 0.0f), fishTextures[i], fishPoints[i] }); //position, speed, texture for each fish
+        fishList.push_back({ glm::vec2(-100.0f * i, 100.0f * i), glm::vec2(50.0f, 0.0f), fishTextures[i], fishPoints[i] }); //position, speed, texture for each fish
     }
 
     // Register GLUT callbacks
