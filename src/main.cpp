@@ -26,6 +26,7 @@ struct Fish {
     glm::vec2 position;
     glm::vec2 speed;
     unsigned int textureID;
+    int pointValue;
 };
 
 // Globals
@@ -33,6 +34,7 @@ std::vector<Fish> fishList;
 Shader* shader;
 unsigned int VAO;
 unsigned int fishTextures[5];
+int fishPoints[5];
 int score = 0;
 
 int main(int argc, char** argv) {
@@ -89,13 +91,14 @@ int main(int argc, char** argv) {
 
     // Load textures
     fishTextures[0] = loadTexture("../assets/textures/fish.png");
-    fishTextures[1] = loadTexture("../assets/textures/bluelobster.png");
+    fishTextures[1] = loadTexture("../assets/textures/shrimple.png");
     fishTextures[2] = loadTexture("../assets/textures/cool-fishe.png");
     fishTextures[3] = loadTexture("../assets/textures/shar.png");
-    fishTextures[4] = loadTexture("../assets/textures/shrimple.png");
+    fishTextures[4] = loadTexture("../assets/textures/bluelobster.png");
 
     for (int i = 0; i < 5; i++) {
-        fishList.push_back({ glm::vec2(-100.0f * i, 100.0f * i), glm::vec2(10.0f, 0.0f), fishTextures[i] }); //position, speed, texture for each fish
+        fishPoints[i] = (i+1)*10;
+        fishList.push_back({ glm::vec2(-100.0f * i, 100.0f * i), glm::vec2(10.0f, 0.0f), fishTextures[i], fishPoints[i] }); //position, speed, texture for each fish
     }
 
     // Register GLUT callbacks
@@ -172,7 +175,7 @@ void mouseCallback(int button, int state, int x, int y) {
 
                 if (gameX >= fishX && gameX <= fishX + 100.0f &&
                 gameY >= fishY && gameY <= fishY + 100.0f) {
-                    score++;
+                    score += fish.pointValue;
                     std::cout << "Score: " << score << std::endl;
                     fish.position.x = -100.0f;
                 }
