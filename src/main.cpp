@@ -123,6 +123,7 @@ void display() {
 
     shader->use();
     shader->setVec3("lightPos", glm::vec3(SCR_WIDTH-50.0f, SCR_HEIGHT-50.0f, 0.0f));
+    shader->setVec3("lightColor", glm::vec3 (1.0f, 1.0f, 1.0f));
 
     // Set up projection
     glm::mat4 projection = glm::ortho(0.0f, (float)SCR_WIDTH, 0.0f, (float)SCR_HEIGHT, -1.0f, 1.0f);
