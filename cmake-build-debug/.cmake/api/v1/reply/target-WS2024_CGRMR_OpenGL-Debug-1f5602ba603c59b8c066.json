@@ -83,7 +83,10 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g -std=gnu++20 -fdiagnostics-color=always"
+					"fragment" : "-g"
+				},
+				{
+					"fragment" : "-std=gnu++20"
 				}
 			],
 			"defines" : 
@@ -97,23 +100,23 @@
 			[
 				{
 					"backtrace" : 4,
-					"path" : "C:/Users/vee/Dev/repos/WS2024-CGRMR-OpenGL/include"
+					"path" : "D:/StudiumFH/5.Semester/Computergrafik/Catchy_Fishy/include"
 				},
 				{
 					"backtrace" : 5,
-					"path" : "C:/Users/vee/Dev/repos/WS2024-CGRMR-OpenGL/libs"
+					"path" : "D:/StudiumFH/5.Semester/Computergrafik/Catchy_Fishy/libs"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "C:/Users/vee/Dev/repos/WS2024-CGRMR-OpenGL/libs/glew/include"
+					"path" : "D:/StudiumFH/5.Semester/Computergrafik/Catchy_Fishy/libs/glew/include"
 				},
 				{
 					"backtrace" : 7,
-					"path" : "C:/Users/vee/Dev/repos/WS2024-CGRMR-OpenGL/libs/freeglut/include"
+					"path" : "D:/StudiumFH/5.Semester/Computergrafik/Catchy_Fishy/libs/freeglut/include"
 				},
 				{
 					"backtrace" : 8,
-					"path" : "C:/Users/vee/Dev/repos/WS2024-CGRMR-OpenGL/libs/glfw/include"
+					"path" : "D:/StudiumFH/5.Semester/Computergrafik/Catchy_Fishy/libs/glfw/include"
 				}
 			],
 			"language" : "CXX",
@@ -146,17 +149,17 @@
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "C:\\Users\\vee\\Dev\\repos\\WS2024-CGRMR-OpenGL\\libs\\glew\\lib\\libglew32.a",
+				"fragment" : "..\\libs\\glew\\lib\\libglew32.a",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "C:\\Users\\vee\\Dev\\repos\\WS2024-CGRMR-OpenGL\\libs\\freeglut\\lib\\libfreeglut.dll.a",
+				"fragment" : "..\\libs\\freeglut\\lib\\libfreeglut.dll.a",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "C:\\Users\\vee\\Dev\\repos\\WS2024-CGRMR-OpenGL\\libs\\glfw\\lib\\libglfw3dll.a",
+				"fragment" : "..\\libs\\glfw\\lib\\libglfw3dll.a",
 				"role" : "libraries"
 			},
 			{

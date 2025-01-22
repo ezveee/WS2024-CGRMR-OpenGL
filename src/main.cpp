@@ -31,7 +31,8 @@ struct Fish {
 // Globals
 std::vector<Fish> fishList;
 Shader* shader;
-unsigned int VAO, fishTexture;
+unsigned int VAO;
+unsigned int fishTextures[5];
 int score = 0;
 
 int main(int argc, char** argv) {
@@ -56,20 +57,21 @@ int main(int argc, char** argv) {
 
     // Define quad vertices
     float vertices[] = {
-        // positions     // texture coords
-         0.0f,  1.0f, 0.0f,  0.0f, 1.0f,
-         1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
-         1.0f,  0.0f, 0.0f,  1.0f, 0.0f,
-         0.0f,  0.0f, 0.0f,  0.0f, 0.0f
-    };
+        // positions     // texture coords (x, y, z (0), u, v (coordinates for texture - the same) - used as fish later
+         0.0f,  1.0f, 0.0f,  0.0f, 1.0f, //Top left
+         1.0f,  1.0f, 0.0f,  1.0f, 1.0f, // Top right
+         1.0f,  0.0f, 0.0f,  1.0f, 0.0f, //Bottom right
+         0.0f,  0.0f, 0.0f,  0.0f, 0.0f //Bottom left
+    }; //Basically . . .Put this vertex of texture on this vertex of quad
     unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
 
+    //Set up to persist vertex data
     unsigned int VBO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
-    glBindVertexArray(VAO);
+    glBindVertexArray(VAO); //vertex array object,
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -86,10 +88,14 @@ int main(int argc, char** argv) {
     glBindVertexArray(0);
 
     // Load textures
-    fishTexture = loadTexture("../assets/textures/fish.png");
+    fishTextures[0] = loadTexture("../assets/textures/fish.png");
+    fishTextures[1] = loadTexture("../assets/textures/bluelobster.png");
+    fishTextures[2] = loadTexture("../assets/textures/cool-fishe.png");
+    fishTextures[3] = loadTexture("../assets/textures/shar.png");
+    fishTextures[4] = loadTexture("../assets/textures/shrimple.png");
 
     for (int i = 0; i < 5; i++) {
-        fishList.push_back({ glm::vec2(-100.0f * i, 100.0f * i), glm::vec2(10.0f, 0.0f), fishTexture });
+        fishList.push_back({ glm::vec2(-100.0f * i, 100.0f * i), glm::vec2(10.0f, 0.0f), fishTextures[i] }); //position, speed, texture for each fish
     }
 
     // Register GLUT callbacks
