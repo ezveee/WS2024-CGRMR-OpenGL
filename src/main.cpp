@@ -59,19 +59,19 @@ int main(int argc, char** argv) {
 
     // Define quad vertices
     float vertices[] = {
-        // positions     // texture coords (x, y, z (0), u, v (coordinates for texture - the same) - used as fish later
-         0.0f,  1.0f, 0.0f,  0.0f, 1.0f, //Top left
-         1.0f,  1.0f, 0.0f,  1.0f, 1.0f, // Top right
-         1.0f,  0.0f, 0.0f,  1.0f, 0.0f, //Bottom right
-         0.0f,  0.0f, 0.0f,  0.0f, 0.0f //Bottom left
+        // positions     // texture coords (x, y, z (0), u, v (coordinates for texture - the same) - used as fish later + NORMALS
+         0.0f,  1.0f, 0.0f,     0.0f, 1.0f,    0.0f, 0.0f, 1.0f,//Top left
+         1.0f,  1.0f, 0.0f,     1.0f, 1.0f,    0.0f, 0.0f, 1.0f, // Top right
+         1.0f,  0.0f, 0.0f,     1.0f, 0.0f,    0.0f, 0.0f, 1.0f, //Bottom right
+         0.0f,  0.0f, 0.0f,     0.0f, 0.0f,    0.0f, 0.0f, 1.0f //Bottom left
     }; //Basically . . .Put this vertex of texture on this vertex of quad
     unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
 
     //Set up to persist vertex data
     unsigned int VBO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    glGenVertexArrays(2, &VAO);
+    glGenBuffers(2, &VBO);
+    glGenBuffers(2, &EBO);
 
     glBindVertexArray(VAO); //vertex array object,
 
@@ -86,6 +86,9 @@ int main(int argc, char** argv) {
 
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
 
@@ -119,6 +122,7 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     shader->use();
+    shader->setVec3("lightPos", glm::vec3(SCR_WIDTH-50.0f, SCR_HEIGHT-50.0f, 0.0f));
 
     // Set up projection
     glm::mat4 projection = glm::ortho(0.0f, (float)SCR_WIDTH, 0.0f, (float)SCR_HEIGHT, -1.0f, 1.0f);
