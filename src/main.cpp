@@ -9,18 +9,19 @@
 #include <vector>
 #include "Shader.h"
 
-// Settings
+// settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// Function declarations
+// function forward declarations
+void initFishData();
 void display();
 void reshape(int width, int height);
 void processInput(unsigned char key, int x, int y);
 void mouseCallback(int button, int state, int x, int y);
-// void renderText(float x, float y, std::string text);
 void renderText(float x, float y, std::string text, float scale = 1.0f);
 unsigned int loadTexture(const char* path);
+float calculateRandomYPosition();
 
 struct Fish {
     glm::vec2 position;
@@ -37,6 +38,7 @@ Shader* shader;
 unsigned int VAO;
 unsigned int fishTextures[5];
 int fishPoints[5];
+float fishSpeeds[5];
 int score = 0;
 
 int main(int argc, char** argv) {
@@ -91,16 +93,17 @@ int main(int argc, char** argv) {
 
     glBindVertexArray(0);
 
-    // Load textures
-    fishTextures[0] = loadTexture("../assets/textures/fish.png");
-    fishTextures[1] = loadTexture("../assets/textures/shrimple.png");
-    fishTextures[2] = loadTexture("../assets/textures/cool-fishe.png");
-    fishTextures[3] = loadTexture("../assets/textures/shar.png");
-    fishTextures[4] = loadTexture("../assets/textures/bluelobster.png");
+    initFishData();
 
     for (int i = 0; i < 5; i++) {
         fishPoints[i] = (i+1)*10;
-        fishList.push_back({ glm::vec2(-100.0f * i, 100.0f * i), glm::vec2(10.0f, 0.0f), fishTextures[i], fishPoints[i] }); //position, speed, texture for each fish
+        float randomY = calculateRandomYPosition();
+        fishList.push_back({
+            glm::vec2(-100.0f * i, randomY),
+            glm::vec2(fishSpeeds[i], 0.0f),
+            fishTextures[i],
+            fishPoints[i]
+        }); //position, speed, texture for each fish
     }
 
     // Register GLUT callbacks
@@ -132,8 +135,10 @@ void display() {
     for (auto& fish : fishList) {
         fish.position += fish.speed * 0.01f;
 
-        if (fish.position.x > SCR_WIDTH)
+        if (fish.position.x > SCR_WIDTH) {
             fish.position.x = -100.0f;
+            fish.position.y = calculateRandomYPosition();
+        }
 
         if (fish.isClicked) {
             fish.scale -= 0.0025f;
@@ -141,6 +146,7 @@ void display() {
                 fish.isClicked = false;
                 fish.scale = 1.0f;
                 fish.position.x = -100.0f;
+                fish.position.y = calculateRandomYPosition();
             }
         }
 
@@ -158,6 +164,26 @@ void display() {
     renderText(200.0f, 200.0f, "Score: " + std::to_string(score), 100);
 
     glutSwapBuffers();
+}
+
+void initFishData() {
+    // load textures
+    fishTextures[0] = loadTexture("../assets/textures/fish.png");
+    fishTextures[1] = loadTexture("../assets/textures/shrimple.png");
+    fishTextures[2] = loadTexture("../assets/textures/cool-fishe.png");
+    fishTextures[3] = loadTexture("../assets/textures/shar.png");
+    fishTextures[4] = loadTexture("../assets/textures/bluelobster.png");
+
+    // init speeds
+    fishSpeeds[0] = 10.0f;
+    fishSpeeds[1] = 20.0f;
+    fishSpeeds[2] = 30.0f;
+    fishSpeeds[3] = 40.0f;
+    fishSpeeds[4] = 60.0f;
+}
+
+float calculateRandomYPosition() {
+    return rand() % (SCR_HEIGHT - 100);
 }
 
 void reshape(int width, int height) {
