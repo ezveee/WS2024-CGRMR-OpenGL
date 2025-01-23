@@ -199,6 +199,18 @@ void processInput(unsigned char key, int x, int y) {
     if (key == 27) { // Escape key
         exit(0);
     }
+    if(key == GLUT_KEY_LEFT){
+
+    }
+    if(key == GLUT_KEY_RIGHT){
+
+    }
+    if(key == GLUT_KEY_UP){
+
+    }
+    if(key == GLUT_KEY_DOWN){
+
+    }
 }
 
 void mouseCallback(int button, int state, int x, int y) {
