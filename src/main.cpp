@@ -140,6 +140,9 @@ void display() {
     glm::mat4 projection = glm::ortho(0.0f, (float)SCR_WIDTH, 0.0f, (float)SCR_HEIGHT, -1.0f, 1.0f);
     shader->setMat4("projection", projection);
 
+    std::cout << "This is camera pos: " << "X: "<< cameraPos.x << " Y: " << cameraPos.y << " Z: " << cameraPos.z << std::endl;
+
+    //set up camera view
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     shader->setMat4("view", view);
 
@@ -204,25 +207,39 @@ void reshape(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-float cameraSpeed = 0.05f; //camera movement speed
+float cameraSpeed = 2.0f; //camera movement speed
 
 void processInput(unsigned char key, int x, int y) {
     if (key == 27) { // Escape key
         exit(0);
     }
-    if (key == 'w') { // Move forward how tho
-        cameraPos += cameraSpeed * cameraFront;
+    glm::vec2 direction(0.0f, 0.0f); // Bewegungsrichtung in der 2D-Ebene
+
+    // Bewegung vorwärts/rückwärts
+    if (key == 'w') { // Nach oben bewegen
+        direction.y += 1.0f;
     }
-    if (key == 's') { // Move backward wait what
-        cameraPos -= cameraSpeed * cameraFront;
+    if (key == 's') { // Nach unten bewegen
+        direction.y -= 1.0f;
     }
-    if (key == 'a') { // Move left
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
+    // Bewegung nach links/rechts
+    if (key == 'a') { // Nach links bewegen
+        direction.x -= 1.0f;
     }
-    if (key == 'd') { // Move right
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (key == 'd') { // Nach rechts bewegen
+        direction.x += 1.0f;
     }
+
+    // Normalisieren des Bewegungsvektors (falls nötig)
+    if (direction != glm::vec2(0.0f, 0.0f)) {
+        direction = glm::normalize(direction);
+    }
+
+    // Kamera-Position basierend auf Geschwindigkeit und Bewegungsrichtung aktualisieren
+    cameraPos += glm::vec3(direction.x, direction.y, 0.0f) * cameraSpeed;
 }
+
 
 void mouseCallback(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
