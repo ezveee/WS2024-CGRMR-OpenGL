@@ -207,36 +207,34 @@ void reshape(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-float cameraSpeed = 2.0f; //camera movement speed
+float cameraSpeed = 4.0f; //camera movement speed ADJUST CAMERA HOW FAST HERE
 
 void processInput(unsigned char key, int x, int y) {
     if (key == 27) { // Escape key
         exit(0);
     }
-    glm::vec2 direction(0.0f, 0.0f); // Bewegungsrichtung in der 2D-Ebene
+    glm::vec2 direction(0.0f, 0.0f); //Direction on 2D screen/plane basically x,y
 
-    // Bewegung vorwärts/rückwärts
-    if (key == 'w') { // Nach oben bewegen
+    if (key == 'w') { //Move up
         direction.y += 1.0f;
     }
-    if (key == 's') { // Nach unten bewegen
+    if (key == 's') { //Move down
         direction.y -= 1.0f;
     }
 
-    // Bewegung nach links/rechts
-    if (key == 'a') { // Nach links bewegen
+    if (key == 'a') { //Move left
         direction.x -= 1.0f;
     }
-    if (key == 'd') { // Nach rechts bewegen
+    if (key == 'd') { //Move right
         direction.x += 1.0f;
     }
 
-    // Normalisieren des Bewegungsvektors (falls nötig)
+    //normalize movement vector!
     if (direction != glm::vec2(0.0f, 0.0f)) {
         direction = glm::normalize(direction);
     }
 
-    // Kamera-Position basierend auf Geschwindigkeit und Bewegungsrichtung aktualisieren
+    //change camerapos based on new direction and how fast it should move
     cameraPos += glm::vec3(direction.x, direction.y, 0.0f) * cameraSpeed;
 }
 
