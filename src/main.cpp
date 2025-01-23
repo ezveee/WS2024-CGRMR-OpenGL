@@ -10,14 +10,13 @@
 #include <cstdlib>  // für rand(), srand()
 #include <ctime>    // time(NULL) für srand()
 
-#include "Shader.h" // Stelle sicher, dass du Shader.h in deinem Projekt hast.
+#include "Shader.h"
 
-// --------------------------------------------------------------------------------
-// Globale Einstellungen & Forward Declarations
-// --------------------------------------------------------------------------------
+// settings
 const unsigned int SCR_WIDTH  = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+// forward declarations
 void initFishData();
 void initEnvironment();
 glm::vec2 calculateRandomEnvironmentPosition();
@@ -39,9 +38,7 @@ struct Fish {
     float scale = 1.0f;
 };
 
-// --------------------------------------------------------------------------------
-// Globale Variablen
-// --------------------------------------------------------------------------------
+// globals
 std::vector<Fish> fishList;
 std::vector<Fish> spawnedFish;
 
@@ -52,59 +49,50 @@ int score = 0;
 Shader* shader       = nullptr;
 unsigned int VAO     = 0;
 
-// Fische & Umgebung
-unsigned int fishTextures[5];                // Fünf verschiedene Fisch-Texturen
-unsigned int backgroundTexture = 0;          // Hintergrund
-std::vector<unsigned int> environmentTextures;  // Rock, Seaweed, Coral, Chest
+// global textures
+unsigned int fishTextures[5];
+unsigned int backgroundTexture = 0;
+std::vector<unsigned int> environmentTextures;
 std::vector<glm::vec2> environmentPositions;
-
-// Bubbles
 std::vector<unsigned int> bubbleTextures;
 std::vector<glm::vec2> bubblePositions;
 
-// Normal Map für Rock
-unsigned int rockNormalMap = 0;  // Hier wird rock_normal.jpg geladen
+// normal map für rock
+unsigned int rockNormalMap = 0;
 
-// Kamera
+// camera
 glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  0.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
-// --------------------------------------------------------------------------------
-// main()
-// --------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-    // Zufallszahlengenerator initialisieren (optional, für Spawn-Positionen)
+    // init rand
     srand(static_cast<unsigned>(time(NULL)));
 
-    // 1) GLUT initialisieren
+    // init GLUT
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowSize(SCR_WIDTH, SCR_HEIGHT);
     glutCreateWindow("OpenGL Game mit Normal Mapping (Rock)");
 
-    // 2) GLEW initialisieren
+    // init GLEW
     GLenum err = glewInit();
     if (err != GLEW_OK) {
         std::cerr << "Failed to initialize GLEW: " << glewGetErrorString(err) << std::endl;
         return -1;
     }
 
-    // 3) Transparenz aktivieren
+    // enable blend for png transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // 4) Shader laden (angepasste Vertex- und Fragment-Shader mit Normal Mapping)
-    //    Bitte Pfade anpassen
-    shader = new Shader(
-            "../assets/shaders/vertexShader.vs",
-            "../assets/shaders/fragmentShader.fs"
-    );
+    // load shaders
+    shader = new Shader("../assets/shaders/vertexShader.vs", "../assets/shaders/fragmentShader.fs");
 
-    // 5) Ein Quad definieren (Position, TexCoord, Normal)
+    // define quad - positions, texCoords, normals
     float vertices[] = {
-            // Positions         // TexCoords   // Normal
+            // positions         // texCoords   // normals
             0.0f,  1.0f, 0.0f,   0.0f, 1.0f,    0.0f, 1.0f, 0.0f,
             1.0f,  1.0f, 0.0f,   1.0f, 1.0f,    0.0f, 1.0f, 0.0f,
             1.0f,  0.0f, 0.0f,   1.0f, 0.0f,    0.0f, 1.0f, 0.0f,
@@ -112,7 +100,6 @@ int main(int argc, char** argv)
     };
     unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
 
-    // 6) VAO, VBO, EBO anlegen
     unsigned int VBO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -120,15 +107,12 @@ int main(int argc, char** argv)
 
     glBindVertexArray(VAO);
 
-    // Vertex-Daten
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // Index-Daten
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // Attribute: position(0), texCoord(1), normal(2)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -140,23 +124,23 @@ int main(int argc, char** argv)
 
     glBindVertexArray(0);
 
-    // 7) Umgebung, Fische, etc. initialisieren
+    // initialise textures (environment, fishies<3, background)
     initEnvironment();
     initFishData();
     backgroundTexture = loadTexture("../assets/textures/background.png");
 
-    // Basis-Fische anlegen
+    // init fish list
     for (int i = 0; i < 5; i++) {
         fishPoints[i] = (i+1)*10;
         fishList.push_back({
-                                   glm::vec2(0, 0),             // Position (wird später überschrieben)
-                                   glm::vec2(fishSpeeds[i], 0.0f),
-                                   fishTextures[i],
-                                   fishPoints[i]
-                           });
+           glm::vec2(0, 0), // initial position - changed later
+           glm::vec2(fishSpeeds[i], 0.0f),
+           fishTextures[i],
+           fishPoints[i]
+       });
     }
 
-    // Zusätzliche Fische "spawnen" mit zufälligen Positionen
+    // spawn 100 random fish somewhere in window
     for(int i = 0; i < 100; i++) {
         int randomIndex = rand() % 5;
         glm::vec2 fishPos;
@@ -174,34 +158,29 @@ int main(int argc, char** argv)
         spawnedFish.push_back(toInsert);
     }
 
-    // 8) GLUT Callbacks
+    // GLUT callbacks
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(processInput);
     glutMouseFunc(mouseCallback);
     glutIdleFunc(display);
 
-    // 9) Hauptschleife
     glutMainLoop();
 
     return 0;
 }
 
-// --------------------------------------------------------------------------------
-// Rendering / Display
-// --------------------------------------------------------------------------------
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Shader aktivieren
     shader->use();
 
-    // 1) Licht-Uniforms (Beispielwerte)
+    // set up light
     shader->setVec3("lightPos", glm::vec3(SCR_WIDTH / 2.0f, SCR_HEIGHT * 1.5f, 0.0f));
     shader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
-    // 2) Projektionsmatrix (Orthografisch für 2D)
+    // set up projection (orthographic cause 2D)
     glm::mat4 projection = glm::ortho(
             0.0f, (float)SCR_WIDTH,
             0.0f, (float)SCR_HEIGHT,
@@ -209,41 +188,36 @@ void display()
     );
     shader->setMat4("projection", projection);
 
-    // 3) Viewmatrix (Kamera)
+    // set up view for camera
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     shader->setMat4("view", view);
 
-    // 4) Zeichnen
     glBindVertexArray(VAO);
 
-    // -- 4.1 Hintergrund
-    {
-        glm::mat4 backgroundModel = glm::mat4(1.0f);
-        backgroundModel = glm::translate(
-                backgroundModel,
-                glm::vec3(
-                        -cameraPos.x - (SCR_WIDTH*2),
-                        -cameraPos.y - (SCR_HEIGHT*2),
-                        0.0f
-                )
-        );
-        backgroundModel = glm::scale(
-                backgroundModel,
-                glm::vec3(SCR_WIDTH * 6, SCR_HEIGHT * 6, 1.0f)
-        );
-        shader->setMat4("model", backgroundModel);
+    // background
+    glm::mat4 backgroundModel = glm::mat4(1.0f);
+    backgroundModel = glm::translate(
+        backgroundModel,
+        glm::vec3(
+                -cameraPos.x - (SCR_WIDTH*2),
+                -cameraPos.y - (SCR_HEIGHT*2),
+                0.0f
+        )
+    );
+    backgroundModel = glm::scale(
+        backgroundModel,
+        glm::vec3(SCR_WIDTH * 6, SCR_HEIGHT * 6, 1.0f)
+    );
+    shader->setMat4("model", backgroundModel);
 
-        // Nur Diffuse
-        glActiveTexture(GL_TEXTURE0);
-        shader->setBool("useNormalMap", false);
-        glBindTexture(GL_TEXTURE_2D, backgroundTexture);
-        // Deine Shader-Uniforms (im Fragment-Shader "texture1")
-        shader->setInt("texture1", 0);
+    glActiveTexture(GL_TEXTURE0);
+    shader->setBool("useNormalMap", false);
+    glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+    shader->setInt("texture1", 0);
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    }
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-    // -- 4.2 Environment (Rock, Seaweed, Coral, Chest)
+    // environment
     for (size_t i = 0; i < environmentPositions.size(); ++i) {
         glm::vec2 position = environmentPositions[i];
         glm::mat4 model = glm::mat4(1.0f);
@@ -251,16 +225,10 @@ void display()
         model = glm::scale(model, glm::vec3(100.0f, 100.0f, 1.0f));
         shader->setMat4("model", model);
 
-        // Wir haben 4 environmentTextures:
-        //  - 0 => rock.png
-        //  - 1 => seaweed.png
-        //  - 2 => coral.png
-        //  - 3 => chest.png
-        // Rock => i%4 == 0
         int envIndex = i % environmentTextures.size();
 
-        if (envIndex == 0) {
-            // = Rock => Diffuse + Normal Map binden
+        if (envIndex == 0) { // rock texture
+            // bind diffuse and normalmap
             glActiveTexture(GL_TEXTURE0);
             shader->setBool("useNormalMap", false);
             glBindTexture(GL_TEXTURE_2D, environmentTextures[0]);
@@ -271,20 +239,17 @@ void display()
             shader->setInt("normalMap", 1);
             shader->setBool("useNormalMap", true);
 
-        } else {
-            // Seaweed / Coral / Chest => Nur Diffuse
+        } else { // all other textures -> no normalmap
             glActiveTexture(GL_TEXTURE0);
             shader->setBool("useNormalMap", false);
             glBindTexture(GL_TEXTURE_2D, environmentTextures[envIndex]);
             shader->setInt("texture1", 0);
-            // Normal Map nicht genutzt -> falls dein Shader "normalMap" abfragt,
-            // kann man useNormalMap = 0 setzen (je nach Shader-Code).
         }
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
 
-    // -- 4.3 Bubbles
+    // bubbles hihi
     for (size_t i = 0; i < bubblePositions.size(); ++i) {
         glm::vec2 position = bubblePositions[i];
         glm::mat4 model = glm::mat4(1.0f);
@@ -300,20 +265,19 @@ void display()
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
 
-    // -- 4.4 Fische
+    // fishies<3
     for (auto& fish : spawnedFish) {
-        // Bewegung
         fish.position += fish.speed * 0.01f;
 
-        // Respawn
+        // respawn when off screen
         if (fish.position.x > SCR_WIDTH * 2) {
             fish.position.x = calculateRandomXPosition();
             fish.position.y = calculateRandomYPosition();
         }
 
-        // Klick-Animation (Skalierung)
+        // fish clicking logic
         if (fish.isClicked) {
-            fish.scale -= 0.0025f;
+            fish.scale -= 0.0025f; // small fish-being-caught animation
             if (fish.scale <= 0.0f) {
                 fish.isClicked = false;
                 score += fish.pointValue;
@@ -329,7 +293,6 @@ void display()
         model = glm::scale(model, glm::vec3(100.0f * fish.scale, 100.0f * fish.scale, 1.0f));
         shader->setMat4("model", model);
 
-        // Nur Diffuse (Fische haben keine Normal Map)
         glActiveTexture(GL_TEXTURE0);
         shader->setBool("useNormalMap", false);
         glBindTexture(GL_TEXTURE_2D, fish.textureID);
@@ -343,31 +306,23 @@ void display()
     glutSwapBuffers();
 }
 
-// --------------------------------------------------------------------------------
-// Umgebung + Bubbles
-// --------------------------------------------------------------------------------
 void initEnvironment()
 {
-    // 1) Environment-Texturen laden
-    environmentTextures.push_back(loadTexture("../assets/textures/rock.png"));      // Index 0: Rock
-    environmentTextures.push_back(loadTexture("../assets/textures/seaweed.png"));   // Index 1
-    environmentTextures.push_back(loadTexture("../assets/textures/coral.png"));     // Index 2
-    environmentTextures.push_back(loadTexture("../assets/textures/chest.png"));     // Index 3
+    environmentTextures.push_back(loadTexture("../assets/textures/rock.png"));
+    environmentTextures.push_back(loadTexture("../assets/textures/seaweed.png"));
+    environmentTextures.push_back(loadTexture("../assets/textures/coral.png"));
+    environmentTextures.push_back(loadTexture("../assets/textures/chest.png"));
 
-    // 2) Normal Map für Rock
-    rockNormalMap = loadTexture("../assets/textures/rock-normal.jpg");  // Pfad ggf. anpassen
+    rockNormalMap = loadTexture("../assets/textures/rock-normal.jpg");
 
-    // 3) Zufällige Positionen für Environment
     for (int i = 0; i < 28; ++i) {
         environmentPositions.push_back(calculateRandomEnvironmentPosition());
     }
 
-    // 4) Bubbles laden
     bubbleTextures.push_back(loadTexture("../assets/textures/bubble1.png"));
     bubbleTextures.push_back(loadTexture("../assets/textures/bubble2.png"));
     bubbleTextures.push_back(loadTexture("../assets/textures/bubble3.png"));
 
-    // 5) Zufällige Positionen für Bubbles
     for (int i = 0; i < 21; ++i) {
         bubblePositions.push_back(calculateRandomBubblePosition());
     }
@@ -389,19 +344,14 @@ glm::vec2 calculateRandomBubblePosition()
     return randomPos;
 }
 
-// --------------------------------------------------------------------------------
-// Fische
-// --------------------------------------------------------------------------------
 void initFishData()
 {
-    // Texturen
     fishTextures[0] = loadTexture("../assets/textures/fish.png");
     fishTextures[1] = loadTexture("../assets/textures/shrimple.png");
     fishTextures[2] = loadTexture("../assets/textures/cool-fishe.png");
     fishTextures[3] = loadTexture("../assets/textures/shar.png");
     fishTextures[4] = loadTexture("../assets/textures/bluelobster.png");
 
-    // Geschwindigkeiten
     fishSpeeds[0] = 10.0f;
     fishSpeeds[1] = 20.0f;
     fishSpeeds[2] = 30.0f;
@@ -429,9 +379,6 @@ int calculateRandomXPosition()
     return result;
 }
 
-// --------------------------------------------------------------------------------
-// Reshape / Input
-// --------------------------------------------------------------------------------
 void reshape(int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -439,7 +386,7 @@ void reshape(int width, int height)
 
 float cameraSpeed = 4.0f;
 
-// Tastatur
+// keyboard input (camera movement)
 void processInput(unsigned char key, int x, int y)
 {
     if (key == 27) { // ESC
@@ -475,19 +422,19 @@ void processInput(unsigned char key, int x, int y)
     cameraPos += glm::vec3(direction.x, direction.y, 0.0f) * cameraSpeed;
 }
 
-// Maus
+// mouse input
 void mouseCallback(int button, int state, int x, int y)
 {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        // Klick in "Spielkoordinaten" umrechnen
+        // click coords to game coords (kamera position muss miteinberechnet werden)
         float gameX = x + cameraPos.x;
         float gameY = SCR_HEIGHT - y + cameraPos.y;
 
-        // Prüfen, ob ein Fisch geklickt wurde
         for (auto& fish : spawnedFish) {
             float fishX = fish.position.x;
             float fishY = fish.position.y;
 
+            // click happened between start and end of fish texture
             if (gameX >= fishX && gameX <= fishX + 100.0f &&
                 gameY >= fishY && gameY <= fishY + 100.0f) {
                 std::cout << "Fish clicked at ("
@@ -498,16 +445,14 @@ void mouseCallback(int button, int state, int x, int y)
     }
 }
 
-// --------------------------------------------------------------------------------
-// Textur laden (stb_image)
-// --------------------------------------------------------------------------------
 unsigned int loadTexture(const char* path)
 {
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
-    // stb_image: Bild beim Laden flippen
+    // necessary, otherwise textures are flipped upside down
     stbi_set_flip_vertically_on_load(true);
+
     int width, height, nrChannels;
     unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
 
@@ -520,10 +465,10 @@ unsigned int loadTexture(const char* path)
         return 0;
     }
 
-    // RGBA oder RGB?
+    // according to pictures number of channels -> RGBA or RGB
     GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
 
-    // Daten in die Texture laden
+    // load data into texture
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexImage2D(
             GL_TEXTURE_2D, 0, format,
@@ -532,7 +477,7 @@ unsigned int loadTexture(const char* path)
     );
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // Texture-Filter
+    // set texture parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
