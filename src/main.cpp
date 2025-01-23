@@ -152,30 +152,34 @@ int main(int argc, char** argv) {
 }
 
 void display() {
-    // display background texture over entire screen (https://stackoverflow.com/a/31487085)
-    GLuint fboId = 0;
-    glGenFramebuffers(1, &fboId);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
-    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backgroundTexture, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);  // if not already bound
-    glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT,
-                      0, 0, SCR_WIDTH, SCR_HEIGHT,
-                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    // apply shader
+    // use shader
     shader->use();
-    shader->setVec3("lightPos", glm::vec3(SCR_WIDTH/2.0f, SCR_HEIGHT*1.5, 0.0f));
-    shader->setVec3("lightColor", glm::vec3 (1.0f, 1.0f, 1.0f));
 
-    // set up projection
+    // set lightpos and color as uniforms, for fragment shader calculations
+    shader->setVec3("lightPos", glm::vec3(SCR_WIDTH / 2.0f, SCR_HEIGHT * 1.5, 0.0f));
+    shader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+    // orthographic projection matrix
     glm::mat4 projection = glm::ortho(0.0f, (float)SCR_WIDTH, 0.0f, (float)SCR_HEIGHT, -1.0f, 1.0f);
     shader->setMat4("projection", projection);
 
-    // set up camera view
+    // camera matrix
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     shader->setMat4("view", view);
 
+    // RENDERING
     glBindVertexArray(VAO);
+
+    //render background with texture
+    glm::mat4 backgroundModel = glm::mat4(1.0f);
+    backgroundModel = glm::translate(backgroundModel, glm::vec3(-cameraPos.x-(SCR_WIDTH*2), -cameraPos.y-(SCR_HEIGHT*2), 0.0f));
+    backgroundModel = glm::scale(backgroundModel, glm::vec3(SCR_WIDTH * 6, SCR_HEIGHT * 6, 1.0f)); //background size scaled uppp
+    shader->setMat4("model", backgroundModel);
+
+    glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     // render environment objects
     for (size_t i = 0; i < environmentPositions.size(); ++i) {
@@ -205,11 +209,11 @@ void display() {
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
 
-    // render fish
+    // render fishies
     for (auto& fish : spawnedFish) {
         fish.position += fish.speed * 0.01f;
 
-        // fish offscreen? -> calculate new spawn position
+        // respawn if out of bounds
         if (fish.position.x > SCR_WIDTH * 2) {
             fish.position.x = calculateRandomXPosition();
             fish.position.y = calculateRandomYPosition();
@@ -228,6 +232,7 @@ void display() {
             }
         }
 
+        // move fish and stuff
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(fish.position, 0.0f));
         model = glm::scale(model, glm::vec3(100.0f * fish.scale, 100.0f * fish.scale, 1.0f));
