@@ -41,6 +41,12 @@ int fishPoints[5];
 float fishSpeeds[5];
 int score = 0;
 
+//for camera movement
+glm::vec3 cameraPos   = glm::vec3(100.0f, 100.0f,  0.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+
 int main(int argc, char** argv) {
     // Initialize GLUT
     glutInit(&argc, argv);
@@ -134,6 +140,9 @@ void display() {
     glm::mat4 projection = glm::ortho(0.0f, (float)SCR_WIDTH, 0.0f, (float)SCR_HEIGHT, -1.0f, 1.0f);
     shader->setMat4("projection", projection);
 
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    shader->setMat4("view", view);
+
     // Render fish
     glBindVertexArray(VAO);
 
@@ -160,7 +169,7 @@ void display() {
         model = glm::scale(model, glm::vec3(100.0f * fish.scale, 100.0f * fish.scale, 1.0f));
         shader->setMat4("model", model);
 
-        glBindTexture(GL_TEXTURE_2D, fish.textureID);
+        glBindTexture(GL_TEXTURE_2D, fish.textureID); //wird hier texture1 an shader übergeben???
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
 
@@ -195,21 +204,23 @@ void reshape(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
+float cameraSpeed = 0.05f; //camera movement speed
+
 void processInput(unsigned char key, int x, int y) {
     if (key == 27) { // Escape key
         exit(0);
     }
-    if(key == GLUT_KEY_LEFT){
-
+    if (key == 'w') { // Move forward how tho
+        cameraPos += cameraSpeed * cameraFront;
     }
-    if(key == GLUT_KEY_RIGHT){
-
+    if (key == 's') { // Move backward wait what
+        cameraPos -= cameraSpeed * cameraFront;
     }
-    if(key == GLUT_KEY_UP){
-
+    if (key == 'a') { // Move left
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     }
-    if(key == GLUT_KEY_DOWN){
-
+    if (key == 'd') { // Move right
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     }
 }
 
@@ -237,6 +248,7 @@ void mouseCallback(int button, int state, int x, int y) {
                 }
             }
         }
+
     }
 }
 
