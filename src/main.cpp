@@ -13,14 +13,14 @@
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// function forward declarations
+// forward declarations
 void initFishData();
+float calculateRandomYPosition();
 void display();
 void reshape(int width, int height);
+unsigned int loadTexture(const char* path);
 void processInput(unsigned char key, int x, int y);
 void mouseCallback(int button, int state, int x, int y);
-unsigned int loadTexture(const char* path);
-float calculateRandomYPosition();
 
 struct Fish {
     glm::vec2 position;
@@ -31,44 +31,47 @@ struct Fish {
     float scale = 1.0f;
 };
 
-// Globals
+// globals
 std::vector<Fish> fishList;
+float fishSpeeds[5];
+int fishPoints[5];
+int score = 0;
+
 Shader* shader;
 unsigned int VAO;
 unsigned int fishTextures[5];
 unsigned int backgroundTexture;
-int fishPoints[5];
-float fishSpeeds[5];
-int score = 0;
+
 
 int main(int argc, char** argv) {
-    // Initialize GLUT
+    // init GLUT
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowSize(SCR_WIDTH, SCR_HEIGHT);
     glutCreateWindow("Master Baiting");
 
-    // Initialize GLEW
+    // init GLEW
     GLenum err = glewInit();
     if (err != GLEW_OK) {
         std::cerr << "Failed to initialize GLEW: " << glewGetErrorString(err) << std::endl;
         return -1;
     }
 
+    // enable blend for texture transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Load and compile shaders
+    // init shaders
     shader = new Shader("../assets/shaders/vertexShader.vs", "../assets/shaders/fragmentShader.fs");
 
-    // Define quad vertices
+    // define quad vertices
     float vertices[] = {
             // positions     // texture coords (x, y, z (0), u, v (coordinates for texture - the same) - used as fish later + NORMALS
-            0.0f,  1.0f, 0.0f,     0.0f, 1.0f,    0.0f, 1.0f, 0.0f,//Top left
-            1.0f,  1.0f, 0.0f,     1.0f, 1.0f,    0.0f, 1.0f, 0.0f, // Top right
-            1.0f,  0.0f, 0.0f,     1.0f, 0.0f,    0.0f, 1.0f, 0.0f, //Bottom right
-            0.0f,  0.0f, 0.0f,     0.0f, 0.0f,    0.0f, 1.0f, 0.0f //Bottom left
-    }; //Basically . . .Put this vertex of texture on this vertex of quad
+            0.0f,  1.0f, 0.0f,     0.0f, 1.0f,    0.0f, 1.0f, 0.0f, // top left
+            1.0f,  1.0f, 0.0f,     1.0f, 1.0f,    0.0f, 1.0f, 0.0f, // top right
+            1.0f,  0.0f, 0.0f,     1.0f, 0.0f,    0.0f, 1.0f, 0.0f, // bottom right
+            0.0f,  0.0f, 0.0f,     0.0f, 0.0f,    0.0f, 1.0f, 0.0f  // bottom left
+    }; // basically -> put this vertex of texture on this vertex of quad
     unsigned int indices[] = { 0, 1, 2, 0, 2, 3 };
 
     //Set up to persist vertex data
@@ -77,7 +80,7 @@ int main(int argc, char** argv) {
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
-    glBindVertexArray(VAO); //vertex array object,
+    glBindVertexArray(VAO); // vertex array object
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -96,9 +99,10 @@ int main(int argc, char** argv) {
 
     glBindVertexArray(0);
 
-    initFishData();
+    initFishData(); // load fish textures; set fish speeds
     backgroundTexture = loadTexture("../assets/textures/background.png");
 
+    // init fish list
     for (int i = 0; i < 5; i++) {
         fishPoints[i] = (i+1)*10;
         float randomY = calculateRandomYPosition();
@@ -107,10 +111,10 @@ int main(int argc, char** argv) {
             glm::vec2(fishSpeeds[i], 0.0f),
             fishTextures[i],
             fishPoints[i]
-        }); //position, speed, texture for each fish
+        }); // position, speed, texture, pointValue for each fish
     }
 
-    // Register GLUT callbacks
+    // register GLUT callbacks
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(processInput);
@@ -123,43 +127,44 @@ int main(int argc, char** argv) {
 }
 
 void display() {
-    // Clear screen
-    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    // glClear(GL_COLOR_BUFFER_BIT);
-
+    // display background texture over entire screen (https://stackoverflow.com/a/31487085)
     GLuint fboId = 0;
     glGenFramebuffers(1, &fboId);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
-    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                           GL_TEXTURE_2D, backgroundTexture, 0);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, backgroundTexture, 0);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);  // if not already bound
-    glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT,
+    glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT,
+                      0, 0, SCR_WIDTH, SCR_HEIGHT,
                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-
+    // apply shader
     shader->use();
     shader->setVec3("lightPos", glm::vec3(SCR_WIDTH/2.0f, SCR_HEIGHT-50.0f, 0.0f));
     shader->setVec3("lightColor", glm::vec3 (1.0f, 1.0f, 1.0f));
 
-    // Set up projection
+    // set up projection
     glm::mat4 projection = glm::ortho(0.0f, (float)SCR_WIDTH, 0.0f, (float)SCR_HEIGHT, -1.0f, 1.0f);
     shader->setMat4("projection", projection);
 
-    // Render fish
+    // render each fish
     glBindVertexArray(VAO);
 
     for (auto& fish : fishList) {
         fish.position += fish.speed * 0.01f;
 
+        // fish offscreen? -> move back to start
         if (fish.position.x > SCR_WIDTH) {
             fish.position.x = -100.0f;
             fish.position.y = calculateRandomYPosition();
         }
 
+        // fish clicked? -> move back to start and increase score
         if (fish.isClicked) {
-            fish.scale -= 0.0025f;
+            fish.scale -= 0.0025f; // fish disappearing animation
             if (fish.scale <= 0.0f) {
                 fish.isClicked = false;
+                score += fish.pointValue;
+                std::cout << "Score: " << score << std::endl;
                 fish.scale = 1.0f;
                 fish.position.x = -100.0f;
                 fish.position.y = calculateRandomYPosition();
@@ -200,18 +205,21 @@ float calculateRandomYPosition() {
     return rand() % (SCR_HEIGHT - 100);
 }
 
+// reshape window
 void reshape(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
+// keyboard input (only used for esc)
 void processInput(unsigned char key, int x, int y) {
-    if (key == 27) { // Escape key
+    if (key == 27) { // escape key
         exit(0);
     }
 }
 
+// mouse input
 void mouseCallback(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) { // lmb down
         // convert screen coords to game coords
         float gameX = x;
         float gameY = SCR_HEIGHT - y; // flip Y cause opengls origin is bottom-left
@@ -222,16 +230,11 @@ void mouseCallback(int button, int state, int x, int y) {
             float fishY = fish.position.y;
 
             // based on fish size
+            // did click happen in between start and end of fish texture? -> fish clicked
             if (gameX >= fishX && gameX <= fishX + 100.0f &&
                 gameY >= fishY && gameY <= fishY + 100.0f) {
                 std::cout << "Fish clicked at (" << fishX << ", " << fishY << ")" << std::endl;
-
-                if (gameX >= fishX && gameX <= fishX + 100.0f &&
-                gameY >= fishY && gameY <= fishY + 100.0f) {
-                    score += fish.pointValue;
-                    std::cout << "Score: " << score << std::endl;
-                    fish.isClicked = true;
-                }
+                fish.isClicked = true;
             }
         }
     }
@@ -239,29 +242,34 @@ void mouseCallback(int button, int state, int x, int y) {
 
 unsigned int loadTexture(const char* path) {
     unsigned int textureID;
-    glGenTextures(1, &textureID);
+    glGenTextures(1, &textureID); // generate texture name -> stored in textureID
 
+    // texture flipped upside down without this line
     stbi_set_flip_vertically_on_load(true);
 
+    // load image using stb_image
     int width, height, nrChannels;
     unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
-
     std::cout << "Loaded texture: " << path
                   << " (ID: " << textureID << " - " << width << "x" << height << ", channels: " << nrChannels << ")" << std::endl;
 
-    if (data) {
-        GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    } else {
+    if (!data) {
         std::cerr << "Failed to load texture: " << path << std::endl;
+        stbi_image_free(data);
     }
+
+    GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB; // either RGBA or RGB based on amount of channels ! doesnt account for grayscale
+    glBindTexture(GL_TEXTURE_2D, textureID); // bind texture id to 2D target
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data); // specify texture from image
+    glGenerateMipmap(GL_TEXTURE_2D); // "precomputed, optimized versions of a texture at different levels of detail"
+    // "used to improve performance/reduce aliasing artefacts when rendering textures at different distances/scales"
+
+    // set texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     stbi_image_free(data);
     return textureID;
 }
