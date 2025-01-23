@@ -274,8 +274,11 @@ void processInput(unsigned char key, int x, int y) {
 void mouseCallback(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
         // convert screen coords to game coords
-        float gameX = x;
-        float gameY = SCR_HEIGHT - y; // flip Y cause opengls origin is bottom-left
+        float gameX = x + cameraPos.x;
+        float gameY = SCR_HEIGHT - y + cameraPos.y; // flip Y cause opengls origin is bottom-left
+
+        //Außerhalb vom normalen screen: klickt ganz woanders, coordinates hier passen also nicht
+        //nimmt oben klicks weiter unten, unten klicks weiter oben
 
         // check if click intersects any fish
         for (auto& fish : spawnedFish) {
