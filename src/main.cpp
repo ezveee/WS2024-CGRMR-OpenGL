@@ -15,6 +15,9 @@ const unsigned int SCR_HEIGHT = 600;
 
 // forward declarations
 void initFishData();
+void initEnvironment();
+glm::vec2 calculateRandomEnvironmentPosition();
+glm::vec2 calculateRandomBubblePosition();
 int calculateRandomYPosition();
 int calculateRandomXPosition();
 void display();
@@ -43,7 +46,10 @@ Shader* shader;
 unsigned int VAO;
 unsigned int fishTextures[5];
 unsigned int backgroundTexture;
-
+std::vector<unsigned int> environmentTextures;
+std::vector<glm::vec2> environmentPositions;
+std::vector<unsigned int> bubbleTextures;
+std::vector<glm::vec2> bubblePositions;
 
 //for camera movement
 glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  0.0f); //braucht z-achse 0 um 2d fische zu sehn
@@ -107,6 +113,7 @@ int main(int argc, char** argv) {
 
     glBindVertexArray(0);
 
+    initEnvironment();
     initFishData(); // load fish textures; set fish speeds
     backgroundTexture = loadTexture("../assets/textures/background.png");
 
@@ -168,9 +175,37 @@ void display() {
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     shader->setMat4("view", view);
 
-    // render each fish
     glBindVertexArray(VAO);
 
+    // render environment objects
+    for (size_t i = 0; i < environmentPositions.size(); ++i) {
+        glm::vec2 position = environmentPositions[i];
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(position, 0.0f));
+        model = glm::scale(model, glm::vec3(100.0f, 100.0f, 1.0f));
+        shader->setMat4("model", model);
+
+        // Cycle through the textures
+        glBindTexture(GL_TEXTURE_2D, environmentTextures[i % environmentTextures.size()]);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    }
+
+    // render bubbles
+    for (size_t i = 0; i < bubblePositions.size(); ++i) {
+        glm::vec2 position = bubblePositions[i];
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(position, 0.0f));
+        model = glm::scale(model, glm::vec3(150.0f, 150.0f, 1.0f));
+        shader->setMat4("model", model);
+
+        // Cycle through the 3 bubble textures
+        glBindTexture(GL_TEXTURE_2D, bubbleTextures[i % bubbleTextures.size()]);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    }
+
+    // render fish
     for (auto& fish : spawnedFish) {
         fish.position += fish.speed * 0.01f;
 
@@ -205,6 +240,41 @@ void display() {
     glBindVertexArray(0);
 
     glutSwapBuffers();
+}
+
+void initEnvironment() {
+    // load environment textures
+    environmentTextures.push_back(loadTexture("../assets/textures/rock.png"));
+    environmentTextures.push_back(loadTexture("../assets/textures/seaweed.png"));
+    environmentTextures.push_back(loadTexture("../assets/textures/coral.png"));
+    environmentTextures.push_back(loadTexture("../assets/textures/chest.png"));
+
+    for (int i = 0; i < 28; ++i) {
+        environmentPositions.push_back(calculateRandomEnvironmentPosition());
+    }
+
+    // load bubble textures
+    bubbleTextures.push_back(loadTexture("../assets/textures/bubble1.png"));
+    bubbleTextures.push_back(loadTexture("../assets/textures/bubble2.png"));
+    bubbleTextures.push_back(loadTexture("../assets/textures/bubble3.png"));
+
+    for (int i = 0; i < 21; ++i) {
+        bubblePositions.push_back(calculateRandomBubblePosition());
+    }
+}
+
+glm::vec2 calculateRandomEnvironmentPosition() {
+    glm::vec2 randomPos;
+    randomPos.x = -800 + (rand() % 2381);  // random x between -800 and 1580
+    randomPos.y = -585 - (rand() % 16); // random y between -585 and -600
+    return randomPos;
+}
+
+glm::vec2 calculateRandomBubblePosition() {
+    glm::vec2 randomPos;
+    randomPos.x = -800 + (rand() % 2401);
+    randomPos.y = -600 + (rand() % 1801);
+    return randomPos;
 }
 
 void initFishData() {
