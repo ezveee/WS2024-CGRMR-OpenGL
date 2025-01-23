@@ -108,21 +108,21 @@ int main(int argc, char** argv)
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // upload vertex data
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // upload index data
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // position attribute
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // texCoord attribute
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // normal attribute
     glEnableVertexAttribArray(2);
 
-    glBindVertexArray(0);
+    glBindVertexArray(0); // unbind VAO
 
     // initialise textures (environment, fishies<3, background)
     initEnvironment();
@@ -172,7 +172,7 @@ int main(int argc, char** argv)
 
 void display()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT); // clear frame buffer
 
     shader->use();
 
@@ -210,12 +210,12 @@ void display()
     );
     shader->setMat4("model", backgroundModel);
 
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0); // activate first texture unit
     shader->setBool("useNormalMap", false);
     glBindTexture(GL_TEXTURE_2D, backgroundTexture);
     shader->setInt("texture1", 0);
 
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // draw background
 
     // environment
     for (size_t i = 0; i < environmentPositions.size(); ++i) {
@@ -246,7 +246,7 @@ void display()
             shader->setInt("texture1", 0);
         }
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // draw environment objects
     }
 
     // bubbles hihi
@@ -262,7 +262,7 @@ void display()
         glBindTexture(GL_TEXTURE_2D, bubbleTextures[i % bubbleTextures.size()]);
         shader->setInt("texture1", 0);
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // draw bubbles<3
     }
 
     // fishies<3
@@ -277,7 +277,7 @@ void display()
 
         // fish clicking logic
         if (fish.isClicked) {
-            fish.scale -= 0.0025f; // small fish-being-caught animation
+            fish.scale -= 0.0025f; // small "fish-being-caught" animation
             if (fish.scale <= 0.0f) {
                 fish.isClicked = false;
                 score += fish.pointValue;
@@ -298,7 +298,7 @@ void display()
         glBindTexture(GL_TEXTURE_2D, fish.textureID);
         shader->setInt("texture1", 0);
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // draw fishies
     }
 
     glBindVertexArray(0);
