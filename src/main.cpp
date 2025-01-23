@@ -164,8 +164,8 @@ void display() {
 
     //render background with texture
     glm::mat4 backgroundModel = glm::mat4(1.0f);
-    backgroundModel = glm::translate(backgroundModel, glm::vec3(-cameraPos.x, -cameraPos.y, 0.0f));
-    backgroundModel = glm::scale(backgroundModel, glm::vec3(SCR_WIDTH * 3, SCR_HEIGHT * 2, 1.0f)); //background size scaled uppp
+    backgroundModel = glm::translate(backgroundModel, glm::vec3(-cameraPos.x-(SCR_WIDTH*2), -cameraPos.y-(SCR_HEIGHT*2), 0.0f));
+    backgroundModel = glm::scale(backgroundModel, glm::vec3(SCR_WIDTH * 6, SCR_HEIGHT * 6, 1.0f)); //background size scaled uppp
     shader->setMat4("model", backgroundModel);
 
     glBindTexture(GL_TEXTURE_2D, backgroundTexture);
