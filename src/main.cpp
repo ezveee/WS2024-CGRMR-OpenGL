@@ -15,7 +15,7 @@ const unsigned int SCR_HEIGHT = 600;
 
 // forward declarations
 void initFishData();
-float calculateRandomYPosition();
+int calculateRandomYPosition();
 int calculateRandomXPosition();
 void display();
 void reshape(int width, int height);
