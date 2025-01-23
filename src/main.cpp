@@ -42,7 +42,7 @@ float fishSpeeds[5];
 int score = 0;
 
 //for camera movement
-glm::vec3 cameraPos   = glm::vec3(100.0f, 100.0f,  0.0f);
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  0.0f); //braucht z-achse 0 um 2d fische zu sehn
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
