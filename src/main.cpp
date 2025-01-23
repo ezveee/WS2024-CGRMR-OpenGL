@@ -21,7 +21,8 @@ void processInput(unsigned char key, int x, int y);
 void mouseCallback(int button, int state, int x, int y);
 void renderText(float x, float y, std::string text, float scale = 1.0f);
 unsigned int loadTexture(const char* path);
-float calculateRandomYPosition();
+int calculateRandomYPosition();
+int calculateRandomXPosition();
 
 struct Fish {
     glm::vec2 position;
@@ -34,6 +35,7 @@ struct Fish {
 
 // Globals
 std::vector<Fish> fishList;
+std::vector<Fish> spawnedFish;
 Shader* shader;
 unsigned int VAO;
 unsigned int fishTextures[5];
@@ -106,13 +108,23 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < 5; i++) {
         fishPoints[i] = (i+1)*10;
-        float randomY = calculateRandomYPosition();
         fishList.push_back({
-            glm::vec2(-100.0f * i, randomY),
+            glm::vec2(0, 0),
             glm::vec2(fishSpeeds[i], 0.0f),
             fishTextures[i],
             fishPoints[i]
         }); //position, speed, texture for each fish
+    }
+
+    for(int i = 0; i < 100; i++){
+        int randomIndex = rand() % 5; //get an index between 0 and 4 (included)
+        glm::vec2 fishPos;
+        fishPos.x = calculateRandomXPosition();
+        fishPos.y = calculateRandomYPosition();
+        Fish toInsert = {fishPos, fishList[randomIndex].speed,
+                             fishList[randomIndex].textureID, fishList[randomIndex].pointValue,
+                             fishList[randomIndex].isClicked, fishList[randomIndex].scale};
+        spawnedFish.push_back(toInsert);
     }
 
     // Register GLUT callbacks
@@ -133,14 +145,12 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     shader->use();
-    shader->setVec3("lightPos", glm::vec3(SCR_WIDTH/2.0f, SCR_HEIGHT-50.0f, 0.0f));
+    shader->setVec3("lightPos", glm::vec3(SCR_WIDTH/2.0f, SCR_HEIGHT*1.5, 0.0f));
     shader->setVec3("lightColor", glm::vec3 (1.0f, 1.0f, 1.0f));
 
     // Set up projection
     glm::mat4 projection = glm::ortho(0.0f, (float)SCR_WIDTH, 0.0f, (float)SCR_HEIGHT, -1.0f, 1.0f);
     shader->setMat4("projection", projection);
-
-    std::cout << "This is camera pos: " << "X: "<< cameraPos.x << " Y: " << cameraPos.y << " Z: " << cameraPos.z << std::endl;
 
     //set up camera view
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
@@ -149,11 +159,11 @@ void display() {
     // Render fish
     glBindVertexArray(VAO);
 
-    for (auto& fish : fishList) {
+    for (auto& fish : spawnedFish) {
         fish.position += fish.speed * 0.01f;
 
-        if (fish.position.x > SCR_WIDTH) {
-            fish.position.x = -100.0f;
+        if (fish.position.x > SCR_WIDTH*2) {
+            fish.position.x = calculateRandomXPosition();
             fish.position.y = calculateRandomYPosition();
         }
 
@@ -162,7 +172,7 @@ void display() {
             if (fish.scale <= 0.0f) {
                 fish.isClicked = false;
                 fish.scale = 1.0f;
-                fish.position.x = -100.0f;
+                fish.position.x = calculateRandomXPosition();
                 fish.position.y = calculateRandomYPosition();
             }
         }
@@ -199,8 +209,22 @@ void initFishData() {
     fishSpeeds[4] = 60.0f;
 }
 
-float calculateRandomYPosition() {
-    return rand() % (SCR_HEIGHT - 100);
+int calculateRandomYPosition() {
+    int randomSign = rand() % 2;
+    int result = rand() % (SCR_HEIGHT*2);
+    if(randomSign == 0){
+        return result * -1;
+    }
+    return rand() % (SCR_HEIGHT*2);
+}
+
+int calculateRandomXPosition() {
+    int randomSign = rand() % 2;
+    int result = rand() % (SCR_WIDTH*2);
+    if(randomSign == 0){
+        return result * -1;
+    }
+    return rand() % (SCR_WIDTH*2);
 }
 
 void reshape(int width, int height) {
@@ -216,17 +240,25 @@ void processInput(unsigned char key, int x, int y) {
     glm::vec2 direction(0.0f, 0.0f); //Direction on 2D screen/plane basically x,y
 
     if (key == 'w') { //Move up
-        direction.y += 1.0f;
+        if(cameraPos.y + 1.0f < SCR_HEIGHT){
+            direction.y += 1.0f;
+        }
     }
     if (key == 's') { //Move down
-        direction.y -= 1.0f;
+        if(cameraPos.y - 1.0f > (int)-SCR_HEIGHT){
+            direction.y -= 1.0f;
+        }
     }
 
     if (key == 'a') { //Move left
-        direction.x -= 1.0f;
+        if(cameraPos.x - 1.0f > (int)-SCR_WIDTH){
+            direction.x -= 1.0f;
+        }
     }
     if (key == 'd') { //Move right
-        direction.x += 1.0f;
+        if(cameraPos.x + 1.0f < SCR_WIDTH){
+            direction.x += 1.0f;
+        }
     }
 
     //normalize movement vector!
@@ -246,7 +278,7 @@ void mouseCallback(int button, int state, int x, int y) {
         float gameY = SCR_HEIGHT - y; // flip Y cause opengls origin is bottom-left
 
         // check if click intersects any fish
-        for (auto& fish : fishList) {
+        for (auto& fish : spawnedFish) {
             float fishX = fish.position.x;
             float fishY = fish.position.y;
 
