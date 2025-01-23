@@ -175,7 +175,7 @@ void display() {
     //render background with texture
     glm::mat4 backgroundModel = glm::mat4(1.0f);
     backgroundModel = glm::translate(backgroundModel, glm::vec3(-cameraPos.x-(SCR_WIDTH*2), -cameraPos.y-(SCR_HEIGHT*2), 0.0f));
-    backgroundModel = glm::scale(backgroundModel, glm::vec3(SCR_WIDTH * 6, SCR_HEIGHT * 6, 1.0f)); //background size scaled uppp
+    backgroundModel = glm::scale(backgroundModel, glm::vec3(SCR_WIDTH * 5, SCR_HEIGHT * 5, 1.0f)); //background size scaled uppp
     shader->setMat4("model", backgroundModel);
 
     glBindTexture(GL_TEXTURE_2D, backgroundTexture);
@@ -249,7 +249,7 @@ void display() {
 
 void initEnvironment() {
     // load environment textures
-    environmentTextures.push_back(loadTexture("../assets/textures/rock.png"));
+    environmentTextures.push_back(loadTexture("../assets/textures/rock-png.png"));
     environmentTextures.push_back(loadTexture("../assets/textures/seaweed.png"));
     environmentTextures.push_back(loadTexture("../assets/textures/coral.png"));
     environmentTextures.push_back(loadTexture("../assets/textures/chest.png"));
