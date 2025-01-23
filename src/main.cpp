@@ -19,7 +19,6 @@ void display();
 void reshape(int width, int height);
 void processInput(unsigned char key, int x, int y);
 void mouseCallback(int button, int state, int x, int y);
-void renderText(float x, float y, std::string text, float scale = 1.0f);
 unsigned int loadTexture(const char* path);
 float calculateRandomYPosition();
 
@@ -178,8 +177,6 @@ void display() {
 
     glBindVertexArray(0);
 
-    renderText(200.0f, 200.0f, "Score: " + std::to_string(score), 100);
-
     glutSwapBuffers();
 }
 
@@ -239,23 +236,6 @@ void mouseCallback(int button, int state, int x, int y) {
         }
     }
 }
-
-// void renderText(float x, float y, std::string text) {
-void renderText(float x, float y, std::string text, float scale) {
-    glPushMatrix();
-
-    glTranslatef(x, y, 0.0f);
-    glScalef(scale, scale, 1.0f);
-
-    glColor3f(1.0f, 1.0f, 1.0f);
-
-    for (char c : text) {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, c);
-    }
-
-    glPopMatrix();
-}
-
 
 unsigned int loadTexture(const char* path) {
     unsigned int textureID;
