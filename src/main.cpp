@@ -16,6 +16,7 @@ const unsigned int SCR_HEIGHT = 600;
 // forward declarations
 void initFishData();
 float calculateRandomYPosition();
+int calculateRandomXPosition();
 void display();
 void reshape(int width, int height);
 unsigned int loadTexture(const char* path);
@@ -33,6 +34,7 @@ struct Fish {
 
 // globals
 std::vector<Fish> fishList;
+std::vector<Fish> spawnedFish;
 float fishSpeeds[5];
 int fishPoints[5];
 int score = 0;
@@ -41,6 +43,12 @@ Shader* shader;
 unsigned int VAO;
 unsigned int fishTextures[5];
 unsigned int backgroundTexture;
+
+
+//for camera movement
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  0.0f); //braucht z-achse 0 um 2d fische zu sehn
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
 
 int main(int argc, char** argv) {
@@ -105,13 +113,23 @@ int main(int argc, char** argv) {
     // init fish list
     for (int i = 0; i < 5; i++) {
         fishPoints[i] = (i+1)*10;
-        float randomY = calculateRandomYPosition();
         fishList.push_back({
-            glm::vec2(-100.0f * i, randomY),
+            glm::vec2(0, 0),
             glm::vec2(fishSpeeds[i], 0.0f),
             fishTextures[i],
             fishPoints[i]
         }); // position, speed, texture, pointValue for each fish
+    }
+
+    for(int i = 0; i < 100; i++) {
+        int randomIndex = rand() % 5; //get an index between 0 and 4 (included)
+        glm::vec2 fishPos;
+        fishPos.x = calculateRandomXPosition();
+        fishPos.y = calculateRandomYPosition();
+        Fish toInsert = {fishPos, fishList[randomIndex].speed,
+                             fishList[randomIndex].textureID, fishList[randomIndex].pointValue,
+                             fishList[randomIndex].isClicked, fishList[randomIndex].scale};
+        spawnedFish.push_back(toInsert);
     }
 
     // register GLUT callbacks
@@ -139,22 +157,26 @@ void display() {
 
     // apply shader
     shader->use();
-    shader->setVec3("lightPos", glm::vec3(SCR_WIDTH/2.0f, SCR_HEIGHT-50.0f, 0.0f));
+    shader->setVec3("lightPos", glm::vec3(SCR_WIDTH/2.0f, SCR_HEIGHT*1.5, 0.0f));
     shader->setVec3("lightColor", glm::vec3 (1.0f, 1.0f, 1.0f));
 
     // set up projection
     glm::mat4 projection = glm::ortho(0.0f, (float)SCR_WIDTH, 0.0f, (float)SCR_HEIGHT, -1.0f, 1.0f);
     shader->setMat4("projection", projection);
 
+    // set up camera view
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    shader->setMat4("view", view);
+
     // render each fish
     glBindVertexArray(VAO);
 
-    for (auto& fish : fishList) {
+    for (auto& fish : spawnedFish) {
         fish.position += fish.speed * 0.01f;
 
-        // fish offscreen? -> move back to start
-        if (fish.position.x > SCR_WIDTH) {
-            fish.position.x = -100.0f;
+        // fish offscreen? -> calculate new spawn position
+        if (fish.position.x > SCR_WIDTH * 2) {
+            fish.position.x = calculateRandomXPosition();
             fish.position.y = calculateRandomYPosition();
         }
 
@@ -166,7 +188,7 @@ void display() {
                 score += fish.pointValue;
                 std::cout << "Score: " << score << std::endl;
                 fish.scale = 1.0f;
-                fish.position.x = -100.0f;
+                fish.position.x = calculateRandomXPosition();
                 fish.position.y = calculateRandomYPosition();
             }
         }
@@ -201,8 +223,22 @@ void initFishData() {
     fishSpeeds[4] = 60.0f;
 }
 
-float calculateRandomYPosition() {
-    return rand() % (SCR_HEIGHT - 100);
+int calculateRandomYPosition() {
+    int randomSign = rand() % 2;
+    int result = rand() % (SCR_HEIGHT*2);
+    if(randomSign == 0){
+        return result * -1;
+    }
+    return rand() % (SCR_HEIGHT*2);
+}
+
+int calculateRandomXPosition() {
+    int randomSign = rand() % 2;
+    int result = rand() % (SCR_WIDTH*2);
+    if(randomSign == 0){
+        return result * -1;
+    }
+    return rand() % (SCR_WIDTH*2);
 }
 
 // reshape window
@@ -210,22 +246,58 @@ void reshape(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-// keyboard input (only used for esc)
+float cameraSpeed = 4.0f; //camera movement speed ADJUST CAMERA HOW FAST HERE
+
+// keyboard input
 void processInput(unsigned char key, int x, int y) {
     if (key == 27) { // escape key
         exit(0);
     }
+    glm::vec2 direction(0.0f, 0.0f); //Direction on 2D screen/plane basically x,y
+
+    if (key == 'w') { //Move up
+        if(cameraPos.y + 1.0f < SCR_HEIGHT){
+            direction.y += 1.0f;
+        }
+    }
+    if (key == 's') { //Move down
+        if(cameraPos.y - 1.0f > (int)-SCR_HEIGHT){
+            direction.y -= 1.0f;
+        }
+    }
+
+    if (key == 'a') { //Move left
+        if(cameraPos.x - 1.0f > (int)-SCR_WIDTH){
+            direction.x -= 1.0f;
+        }
+    }
+    if (key == 'd') { //Move right
+        if(cameraPos.x + 1.0f < SCR_WIDTH){
+            direction.x += 1.0f;
+        }
+    }
+
+    // normalize movement vector!
+    if (direction != glm::vec2(0.0f, 0.0f)) {
+        direction = glm::normalize(direction);
+    }
+
+    // change camerapos based on new direction and how fast it should move
+    cameraPos += glm::vec3(direction.x, direction.y, 0.0f) * cameraSpeed;
 }
 
 // mouse input
 void mouseCallback(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) { // lmb down
         // convert screen coords to game coords
-        float gameX = x;
-        float gameY = SCR_HEIGHT - y; // flip Y cause opengls origin is bottom-left
+        float gameX = x + cameraPos.x;
+        float gameY = SCR_HEIGHT - y + cameraPos.y; // flip Y cause opengls origin is bottom-left
+
+        // Außerhalb vom normalen screen: klickt ganz woanders, coordinates hier passen also nicht
+        // nimmt oben klicks weiter unten, unten klicks weiter oben
 
         // check if click intersects any fish
-        for (auto& fish : fishList) {
+        for (auto& fish : spawnedFish) {
             float fishX = fish.position.x;
             float fishY = fish.position.y;
 
