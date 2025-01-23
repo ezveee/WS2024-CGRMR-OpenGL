@@ -127,7 +127,7 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     shader->use();
-    shader->setVec3("lightPos", glm::vec3(SCR_WIDTH-50.0f, SCR_HEIGHT-50.0f, 0.0f));
+    shader->setVec3("lightPos", glm::vec3(SCR_WIDTH/2.0f, SCR_HEIGHT-50.0f, 0.0f));
     shader->setVec3("lightColor", glm::vec3 (1.0f, 1.0f, 1.0f));
 
     // Set up projection
