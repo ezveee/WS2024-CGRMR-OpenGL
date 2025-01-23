@@ -37,6 +37,7 @@ std::vector<Fish> fishList;
 Shader* shader;
 unsigned int VAO;
 unsigned int fishTextures[5];
+unsigned int backgroundTexture;
 int fishPoints[5];
 float fishSpeeds[5];
 int score = 0;
@@ -97,6 +98,7 @@ int main(int argc, char** argv) {
     glBindVertexArray(0);
 
     initFishData();
+    backgroundTexture = loadTexture("../assets/textures/background.png");
 
     for (int i = 0; i < 5; i++) {
         fishPoints[i] = (i+1)*10;
@@ -123,8 +125,18 @@ int main(int argc, char** argv) {
 
 void display() {
     // Clear screen
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // glClear(GL_COLOR_BUFFER_BIT);
+
+    GLuint fboId = 0;
+    glGenFramebuffers(1, &fboId);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fboId);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D, backgroundTexture, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);  // if not already bound
+    glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
 
     shader->use();
     shader->setVec3("lightPos", glm::vec3(SCR_WIDTH/2.0f, SCR_HEIGHT-50.0f, 0.0f));
@@ -255,7 +267,7 @@ unsigned int loadTexture(const char* path) {
     unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
 
     std::cout << "Loaded texture: " << path
-                  << " (" << width << "x" << height << ", channels: " << nrChannels << ")" << std::endl;
+                  << " (ID: " << textureID << " - " << width << "x" << height << ", channels: " << nrChannels << ")" << std::endl;
 
     if (data) {
         GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;

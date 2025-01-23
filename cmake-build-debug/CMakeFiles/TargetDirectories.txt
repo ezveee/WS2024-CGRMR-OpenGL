@@ -1,3 +1,0 @@
-D:/StudiumFH/5.Semester/Computergrafik/Catchy_Fishy/cmake-build-debug/CMakeFiles/WS2024_CGRMR_OpenGL.dir
-D:/StudiumFH/5.Semester/Computergrafik/Catchy_Fishy/cmake-build-debug/CMakeFiles/edit_cache.dir
-D:/StudiumFH/5.Semester/Computergrafik/Catchy_Fishy/cmake-build-debug/CMakeFiles/rebuild_cache.dir
